@@ -3,8 +3,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth , db} from '../config/Firebase/Firebase';
 import { Navigate , useNavigate} from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { orderBy, Timestamp  } from 'firebase/firestore';
-import { collection, addDoc , getDocs, query, where ,doc ,  deleteDoc, updateDoc, } from "firebase/firestore";
+import { collection, addDoc , getDocs, query, where ,doc ,  deleteDoc, updateDoc , Timestamp  } from "firebase/firestore";
 
 const Home = () => {
 
@@ -21,9 +20,7 @@ const [currentTodoId, setCurrentTodoId] = useState(null);
 
 useEffect(() => {
   const getDataFromFirestore = async () => {
-    const q = query(collection(db, "todo"),
-     where("uid", "==", auth.currentUser.uid) ,  
-      orderBy("timestamp", "desc"));
+    const q = query(collection(db, "todo"), where("uid", "==", auth.currentUser.uid));
 
 
     const querySnapshot = await getDocs(q);
@@ -33,8 +30,7 @@ useEffect(() => {
       todo.push({
         ...doc.data(),
         docid: doc.id,
-        timestamp: doc.data().timestamp.toDate().toLocaleString()
-      })
+            })
       setTodo([...todo])
       
     });
@@ -83,11 +79,11 @@ const addTodo = async (event) => {
 
   try {
     if (isEditing) {
- 
+ // Update 
       const todoDoc = doc(db, "todo", currentTodoId);
       await updateDoc(todoDoc, { title: inputValue });
       
-
+// Update state
       setTodo((prevTodos) =>
         prevTodos.map((item) =>
           item.docid === currentTodoId ? { ...item, title: inputValue } : item
@@ -97,14 +93,14 @@ const addTodo = async (event) => {
       setIsEditing(false);
       setCurrentTodoId(null);
     } else {
-     
+      // Add new todo
       const docRef = await addDoc(collection(db, "todo"), {
         title: inputValue,
         uid: auth.currentUser.uid,
         timestamp: Timestamp.now()
       });
 
-      setTodo([...todo, { title: inputValue, uid: auth.currentUser.uid, docid: docRef.id, timestamp: new Date().toLocaleString() }]);
+      setTodo([...todo, { title: inputValue, uid: auth.currentUser.uid, docid: docRef.id }]);
     }
 
     todoInput.current.value = '';
@@ -168,10 +164,7 @@ const startEditTodo = (item) => {
         {todo.length > 0 ? (
           todo.map((item) => (
             <li key={item.docid} className="flex items-center justify-between">
-            <span className="text-gray-800">{item.title}</span>
-       <div className="text-gray-500 text-sm">
-            {item.timestamp}
-       </div>
+              <span className="text-gray-800">{item.title}</span>
               <div className="flex space-x-2">
                 <button
                   onClick={() => startEditTodo(item)}
